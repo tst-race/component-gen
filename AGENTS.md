@@ -45,7 +45,7 @@ Four sequential phases. Each produces a markdown design doc + code.
 - Content encoding is out of scope here.
 
 ### 4. Raceboat Transport Component Implementation
-- Copy `plugins/transport-stub` to `<new-transport>/` and follow its `DEVELOPER_GUIDE.md`. Do not start from an empty directory.
+- Generate the plugin from the template, never from an empty directory or by copying by hand (see "Where the new plugin goes" below), then follow `plugins/transport-stub/DEVELOPER_GUIDE.md`.
 - Key functionalities (all present in the template):
   1. Parameter ingestion via `sdk->requestPluginUserInput` (answers arrive in `onUserInputReceived`)
   2. Encoded content queued via `enqueueContent`, sent by `doAction`
@@ -53,6 +53,19 @@ Four sequential phases. Each produces a markdown design doc + code.
   4. User Model action generation for scheduling (the component only declares actions)
 - Produce: design document (functionality, security, nuances) + Component Integration document (User Model interaction types + Encoding content types/parameters; template in the stub's `DEVELOPER_GUIDE.md`).
 - Build, run the unit tests, then run the four integration scenarios; fix errors until all pass. **A transport is not done until `test/run_scenarios.py` reports every scenario PASSED.**
+
+## Where the new plugin goes and what it is called
+
+```bash
+cd /home/ubuntu/racegen
+plugins/transport-stub/new_transport.py --name <Name> --out /home/ubuntu/racegen/<name>-transport
+```
+
+- **Location:** `/home/ubuntu/racegen/<name>-transport/`, a sibling of `raceboat/` and `plugins/` (`<name>` = `<Name>` with a lower-case first letter). `plugins/` is reserved for the framework-team plugins that are already published. Keep the plugin directly under the racegen directory (or `plugins/`): the adapter and `run_scenarios.py` locate `raceboat/` by searching parent directories, and the plugin is registered in `raceboat/test/integration/plugin_registry.json` by a relative path (done by `run_scenarios.py`).
+- **`--name`:** CamelCase, letters and digits only, taken from the service (`S3`, `Mastodon`, `Redis`). It must not collide with an existing composition id (check `python3 raceboat/test/integration/generate_scenario.py --list-channels listener`).
+- **Derived names** (all consistent by construction; do not rename by hand): kit directory / manifest `file_path` / CMake `PLUGIN_NAME` `Plugin<Name>`, library `libPlugin<Name>.so`, transport id `<name>`, composition id and channel gid `<name>Composition`, client class `<Name>Client`, environment variables `<NAME>_SERVER` / `<NAME>_TOKEN`, scenario ids `<name>-send-only`, `-send-recv`, `-client-connect`, `-mixed-client-connect`.
+- **Collisions to avoid:** pick Docker subnets for the scenarios that no other scenario uses (`raceboat/test/integration/scenarios/*.json`; the template uses 10.30.x.0), and keep service-side container names scenario-specific.
+- The generator does not create a git repository. Version the plugin on its own (`git init` inside it, as `plugins/transport-stub` is) and do not add it to the racegen root repo; there it shows up as an untracked directory.
 
 ## Build & test (the one canonical sequence)
 
