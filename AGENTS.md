@@ -21,6 +21,32 @@ The seed service idea is provided externally; the implementation flows from that
 | `PHASE1_…`, `PHASE2_…`, `PHASE3_…`, `PHASE4_IMPLEMENTATION_STEPS.md`, `PHASE4_TRANSPORT_COMPONENT_DESIGN.md` | **templates for each phase's deliverable** (what to answer, which manifest/code values it fixes), with AWS S3 / `plugins/skyhook` as the worked example. Write the real documents for your service as `HIGH_LEVEL_DESIGN.md`, `PRECISE_DESIGN.md`, `SERVICE_INTERACTION_DESIGN.md`, `TRANSPORT_DESIGN.md`. |
 | `TRANSPORT_SERVICE_RESEARCH_AGENT.md` | specification of a Phase 1 research agent that surveys candidate services |
 
+## Workspace setup (one time)
+
+Start from the root of a clone of this repository. The workspace must contain the raceboat framework checkout and three independent plugin checkouts: the transport template, a published real-service example, and the decomposed user-model example. Create this layout before building or generating a transport:
+
+```text
+racegen/
+├── raceboat/                         # raceboat framework and integration harness
+├── plugins/
+│   ├── transport-stub/               # template used to generate new transports
+│   ├── skyhook/                      # published AWS S3 transport example
+│   └── decomposed-exemplars/          # file-based user model and other examples
+└── <name>-transport/                 # generated transport; sibling of raceboat/
+```
+
+From the repository root, clone any missing checkouts into these exact destinations. These are separate Git repositories; do not clone them inside the generated transport or move them under another plugin:
+
+```bash
+mkdir -p plugins
+git clone https://github.com/tst-race/raceboat.git raceboat
+git clone https://github.com/tst-race/transport-stub.git plugins/transport-stub
+git clone https://github.com/tst-race/skyhook.git plugins/skyhook
+git clone https://github.com/tst-race/decomposed-exemplars.git plugins/decomposed-exemplars
+```
+
+If a destination already exists, keep that checkout and do not run its `git clone` command again. Use `plugins/transport-stub` as the canonical template, `plugins/skyhook` for an implemented service transport and `plugins/decomposed-exemplars` for User Model/action-file patterns. Keep the framework checkout at `raceboat/`; the adapter and scenario runner expect to find it there or in a parent directory.
+
 ## Implementation workflow (in order)
 
 Four sequential phases. Each produces a markdown design doc + code.
@@ -156,4 +182,3 @@ Details, flags and troubleshooting: `INTEGRATION_TEST_GUIDE.md`. If you change r
 3. `./run_unit_tests.sh`.
 4. `test/run_scenarios.py --image-tag TAG`; it stops on the first failure.
 5. Diagnose from `test/logs/...`, fix, rebuild, rerun from step 2.
-
