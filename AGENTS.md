@@ -18,7 +18,7 @@ The seed service idea is provided externally; the implementation flows from that
 | `RACEBOAT_PLUGIN_DEVELOPMENT_GUIDE.md` | verified API signatures, canonical code patterns, manifest keys, build system |
 | `INTEGRATION_TEST_GUIDE.md` | build → unit test → integration test commands, troubleshooting |
 | `raceboat/documentation/ChannelAndLinkProperties.md`, `raceboat/test/integration/TESTING_NEW_PLUGINS.md` | framework-owned references (authoritative if they disagree with anything here) |
-| `PHASE1_…`, `PHASE2_…`, `PHASE3_…`, `PHASE4_IMPLEMENTATION_STEPS.md`, `PHASE4_TRANSPORT_COMPONENT_DESIGN.md` | **templates for each phase's deliverable** (what to answer, which manifest/code values it fixes), with AWS S3 / `plugins/skyhook` as the worked example. Write the real documents for your service as `HIGH_LEVEL_DESIGN.md`, `PRECISE_DESIGN.md`, `SERVICE_INTERACTION_DESIGN.md`, `TRANSPORT_DESIGN.md`. |
+| `PHASE1_…`, `PHASE2_…`, `PHASE3_…`, `PHASE4_IMPLEMENTATION_STEPS.md`, `PHASE4_TRANSPORT_COMPONENT_DESIGN.md` | **templates for each phase's deliverable** (what to answer, which manifest/code values it fixes), with AWS S3 / `plugins/skyhook` as the worked example. Write the real documents for your service as `HIGH_LEVEL_DESIGN.md`, `PRECISE_DESIGN.md`, `SERVICE_INTERACTION_DESIGN.md`, `TRANSPORT_DESIGN.md`. The first two go in `designs/<name>/` (the plugin does not exist yet); in Phase 3, when the plugin is generated, move them into `<name>-transport/docs/` where all four then live. |
 | `TRANSPORT_SERVICE_RESEARCH_AGENT.md` | specification of a Phase 1 research agent that surveys candidate services |
 
 ## Workspace setup (one time)
@@ -44,6 +44,8 @@ git clone https://github.com/tst-race/transport-stub.git plugins/transport-stub
 git clone https://github.com/tst-race/skyhook.git plugins/skyhook
 git clone https://github.com/tst-race/decomposed-exemplars.git plugins/decomposed-exemplars
 ```
+
+`scripts/bootstrap.sh` does all of the above on a new system (it also checks prerequisites, installs opencode and pulls the published `raceboat-plugin-builder` / `raceboat-runtime` images with the `main` tag). It never builds images; the default workflow should need no raceboat changes and no image builds beyond adding dependencies that a new plugin requires to the builder/runtime images.
 
 If a destination already exists, keep that checkout and do not run its `git clone` command again. Use `plugins/transport-stub` as the canonical template, `plugins/skyhook` for an implemented service transport and `plugins/decomposed-exemplars` for User Model/action-file patterns. Keep the framework checkout at `raceboat/`; the adapter and scenario runner expect to find it there or in a parent directory.
 
@@ -92,6 +94,15 @@ plugins/transport-stub/new_transport.py --name <Name> --out /home/ubuntu/racegen
 - **Derived names** (all consistent by construction; do not rename by hand): kit directory / manifest `file_path` / CMake `PLUGIN_NAME` `Plugin<Name>`, library `libPlugin<Name>.so`, transport id `<name>`, composition id and channel gid `<name>Composition`, client class `<Name>Client`, environment variables `<NAME>_SERVER` / `<NAME>_TOKEN`, scenario ids `<name>-send-only`, `-send-recv`, `-client-connect`, `-mixed-client-connect`.
 - **Collisions to avoid:** pick Docker subnets for the scenarios that no other scenario uses (`raceboat/test/integration/scenarios/*.json`; the template uses 10.30.x.0), and keep service-side container names scenario-specific.
 - The generator does not create a git repository. Version the plugin on its own (`git init` inside it, as `plugins/transport-stub` is) and do not add it to the racegen root repo; there it shows up as an untracked directory.
+
+## Credentials for the service (`.env`)
+
+Whatever credentials the new transport needs (tokens, keys, usernames, endpoints) live in `/home/ubuntu/racegen/.env` (gitignored, one `NAME=value` per line). There is no template for it, because the variable names depend on the service.
+
+- **Naming:** use `<NAME>_*` (e.g. `<NAME>_TOKEN`, `<NAME>_SERVER`), matching the generated plugin's environment variables.
+- **Discover, don't guess:** from Phase 2 on, state exactly which variables the design needs and ask the developer to add them to `.env`. Check whether a variable is *set* by name (`grep -q '^NAME=' .env`) without printing values. Reuse credentials already in `.env` from earlier stub tests before asking again.
+- **Never read or echo the values.** `.env` is denied to the file-read tool; do not `cat` it or paste values into files, logs, docs, command lines or chat. Load it only into the environment of the process that needs it: `set -a; . ./.env; set +a`.
+- **Inject, don't embed:** code reads parameters passed by the SDK; adapters pass `${ENV_VAR}` placeholders to docker compose. Nothing but the variable name may appear in committed or generated files.
 
 ## Build & test (the one canonical sequence)
 

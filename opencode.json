@@ -1,0 +1,69 @@
+{
+    "$schema": "https://opencode.ai/config.json",
+    "instructions": [
+        "AGENTS.md"
+    ],
+    "permission": {
+        "read": {
+            "*": "allow",
+            "*.env": "deny",
+            "*.env.*": "deny",
+            "*.env.example": "allow"
+        },
+        "edit": {
+            "*": "allow"
+        },
+        "bash": {
+            "*": "ask",
+            "npm *": "allow",
+            "npx *": "allow",
+            "yarn *": "allow",
+            "pnpm *": "allow",
+            "git *": "allow",
+            "cd *": "allow",
+            "ls *": "allow",
+            "cat *": "allow",
+            "find *": "allow",
+            "grep *": "allow",
+            "ps *": "allow",
+            "wc *": "allow",
+            "timeout *": "allow",
+            "sleep *": "allow",
+            "make *": "allow",
+            "cmake *": "allow",
+            "gcc *": "allow",
+            "g++ *": "allow",
+            "clang *": "allow",
+            "clang++ *": "allow",
+            "java *": "allow",
+            "mvn *": "allow",
+            "gradle *": "allow",
+            "python *": "allow",
+            "pip *": "allow",
+            "cargo *": "allow",
+            "rustc *": "allow",
+            "go *": "allow",
+            "go build *": "allow",
+            "go test *": "allow",
+            "dotnet *": "allow",
+            "rb *": "allow",
+            "ruby *": "allow",
+            "bundle *": "allow",
+            "docker *": "allow",
+            "docker compose *": "allow",
+            "docker-compose *": "allow",
+            "head *": "allow",
+            "docker compose -f *": "allow",
+            "docker logs *": "allow"
+        },
+        "webfetch": {
+            "*": "allow"
+        },
+        "websearch": {
+            "*": "allow"
+        },
+        "external_directory": {
+            "**/*": "deny"
+        }
+    }
+}

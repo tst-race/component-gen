@@ -5,8 +5,10 @@ code/
 .DS_Store
 Thumbs.db
 
-# Tool directories
-.opencode/
+# Tool directories (.opencode/ holds committed agents/commands; ignore only local state)
+.opencode/node_modules/
+.opencode/package.json
+.opencode/bun.lock
 
 # Editor files
 .vscode/
@@ -52,5 +54,11 @@ yarn-error.log*
 .classpath
 .settings/
 
+# Cloned by scripts/bootstrap.sh
 plugins/
 raceboat/
+
+# Generated transports (one directory per service)
+*-transport/
+*-encoding/
+*-user-model/
