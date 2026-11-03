@@ -22,7 +22,7 @@ The seed service idea is provided externally; the implementation flows from that
 | `PHASE1_…`, `PHASE2_…`, `PHASE3_…`, `PHASE4_IMPLEMENTATION_STEPS.md`, `PHASE4_TRANSPORT_COMPONENT_DESIGN.md` | **Transport templates** for each phase's deliverable (what to answer, which manifest/code values it fixes), with AWS S3 / `plugins/skyhook` as the worked example. Write the real documents for your service as `HIGH_LEVEL_DESIGN.md`, `PRECISE_DESIGN.md`, `SERVICE_INTERACTION_DESIGN.md`, `TRANSPORT_DESIGN.md`. The first two go in `designs/<name>/` (the plugin does not exist yet); in Phase 3, when the plugin is generated, move them into `<name>-transport/docs/` where all four then live. |
 | `TRANSPORT_SERVICE_RESEARCH_AGENT.md` | specification of a Phase 1 research agent that surveys candidate services |
 | `PHASE1_ENCODING_HIGH_LEVEL_DESIGN.md`, `PHASE2_ENCODING_PRECISE_DESIGN.md`, `PHASE3_ENCODING_PROOF_OF_CONCEPT.md`, `PHASE4_ENCODING_IMPLEMENTATION_STEPS.md`, `PHASE4_ENCODING_COMPONENT_DESIGN.md` | **Encoding templates** for selecting a format tool, specifying capacity/timing, proving exact byte recovery, and implementing an `IEncodingComponent`. Use `plugins/decomposed-exemplars/source/encoding/PluginCommsTwoSixBase64Encoding.*` as the code reference. |
-| `ENCODING_TOOL_RESEARCH_AGENT.md`, `.opencode/agent/encoding-researcher.md`, `.opencode/agent/encoding-implementer.md` | encoding research and implementation agent specifications. |
+| `ENCODING_TOOL_RESEARCH_AGENT.md`, `.opencode/agent/encoding-*.md`, `.opencode/command/encoding-phase*.md` | encoding research, design, proof-of-concept, implementation agents, and their `/encoding-phase1` through `/encoding-phase4` entry points. |
 
 Generate a new encoding plugin from the template, never by editing the template in place:
 
@@ -103,7 +103,9 @@ Four sequential phases. Each produces a markdown design doc + code.
 
 Encoding components are separate from transport plugins. The seed is a **declared content format** (for example, PNG, JPEG, text, MP4, or a model-file format), and the work evaluates ordinary format encoders/decoders or serializers that produce that format. The supported scope is transparent format conversion/serialization with exact byte recovery. Cover-file steganography, concealment, stealth/fingerprint ranking, and evasion of detection are out of scope.
 
-Follow the four encoding templates in order; each phase produces its design or implementation deliverable:
+Invoke encoding work with `/encoding-phase1 <format>`, `/encoding-phase2 <format>`, `/encoding-phase3 <format>`, and `/encoding-phase4 <format>`. Run them in order; each phase reads the previous phase's deliverable. Phase 1 through Phase 3 artifacts live under `designs/<format>/`; Phase 4 generates `<format>-encoding/` and carries the approved design documents into its `docs/` directory.
+
+Each phase produces its design or implementation deliverable:
 
 1. **High-level design:** survey candidate libraries/tools that can produce and parse the requested format. Compare format support, input requirements, platform/runtime fit, licensing, maintenance, and testability. Write `designs/<format>/ENCODING_HIGH_LEVEL_DESIGN.md`.
 2. **Precise design:** select a tool and specify parameters, format validation, actual payload capacity, dependencies, and benchmark conditions. Establish the exact meaning/units of `EncodingProperties.encodingTime` from the framework consumer before assigning it; do not infer units or timing semantics from the field name. Write `ENCODING_PRECISE_DESIGN.md`.
