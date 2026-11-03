@@ -15,7 +15,7 @@ Do:
 - Expand the top-rated Phase 1 option into the precise channel definition, answering all sections of the template.
 - Follow the "Phase 2 Design Principles" in `AGENTS.md`: list content types by size and format only; state the service's inherent multicast/unicast nature and retention properties rather than configurable policies; default to two independent unidirectional channels.
 - Specify the address format and link lifecycle (who creates, who loads, what each side deletes).
-- List the credentials the design needs as environment variable names (`<NAME>_*`) with what each is for, and whether it is host-specific or shared in the link address. State that the developer must put them in `.env`.
+- List the credentials the design needs as environment variable names (`<NAME>_*`) with what each is for, and whether it is host-specific or shared in the link address. Ask the developer to make them available to the process that needs them; `.env` is an optional developer-managed mechanism, not a file for the agent to inspect.
 - Write the result to `PRECISE_DESIGN.md` next to the Phase 1 document.
 
 Rules:

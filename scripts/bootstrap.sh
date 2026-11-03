@@ -59,7 +59,7 @@ mkdir -p "$ROOT/plugins"
 clone https://github.com/tst-race/raceboat.git "$ROOT/raceboat"
 # transport-stub is the template for new transports, decomposed-exemplars supplies
 # the user model and encodings, skyhook is a real-service reference transport.
-for p in transport-stub decomposed-exemplars skyhook; do
+for p in transport-stub decomposed-exemplars skyhook encoding-stub; do
     clone "https://github.com/tst-race/$p.git" "$ROOT/plugins/$p"
 done
 
@@ -80,8 +80,10 @@ cat <<EOF
 
 Bootstrap complete. Next steps:
   1. Configure an LLM provider:   opencode auth login
-  2. If the target service needs credentials, put them in $ROOT/.env (gitignored).
-     The agents will tell you which variable names they need.
+  2. If the target service needs credentials, make the required variables
+     available through your shell or approved secret/environment injection.
+     You may keep local credentials in $ROOT/.env (gitignored); agents must
+     not read, probe, or change permissions on that file.
   3. Start the workflow:          cd $ROOT && opencode
      then run /phase1 <seed service idea>
 EOF

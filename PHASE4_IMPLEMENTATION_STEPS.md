@@ -4,7 +4,7 @@ Build the raceboat transport component from the Phase 2 design and the Phase 3 `
 
 ```bash
 cd /home/ubuntu/racegen
-plugins/transport-stub/new_transport.py --name <Name> --out /home/ubuntu/racegen/<name>-transport
+python3 plugins/transport-stub/new_transport.py --name <Name> --out /home/ubuntu/racegen/<name>-transport
 ```
 
 Then follow `plugins/transport-stub/DEVELOPER_GUIDE.md` (the detailed, command-level version of these steps). Reference for API signatures and patterns: `RACEBOAT_PLUGIN_DEVELOPMENT_GUIDE.md`. For a real-service example of the same structure, read `plugins/skyhook`.
@@ -42,7 +42,7 @@ Run all with `test/run_scenarios.py --image-tag <tag>` (see `INTEGRATION_TEST_GU
 
 ## Principles
 
-1. Reuse the existing user model and encodings; write no user-model or encoding code unless the design requires a new content type (then specify it and stop).
+1. Reuse the existing user model and encodings for transport-only work. If the task requires a new encoding component, follow the separate workflow in `PHASE1_ENCODING_HIGH_LEVEL_DESIGN.md` through `PHASE4_ENCODING_IMPLEMENTATION_STEPS.md`; do not treat encoding work as transport implementation or stop after specifying it.
 2. The link address is the contract between nodes — define it before the component logic.
 3. Never skip a test stage; fix unit tests before debugging integration tests.
 4. Build early; rebuild with the same image tag you test with.

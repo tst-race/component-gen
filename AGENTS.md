@@ -15,11 +15,27 @@ The seed service idea is provided externally; the implementation flows from that
 |---|---|
 | `AGENTS.md` (this file) | workflow, rules, gotchas |
 | `plugins/transport-stub/README.md`, `DEVELOPER_GUIDE.md` | the template and the exact steps to turn it into a new transport |
+| `plugins/encoding-stub/README.md` | the encoding plugin template, Base64 reference, tests, and `new_encoding.py` generator |
 | `RACEBOAT_PLUGIN_DEVELOPMENT_GUIDE.md` | verified API signatures, canonical code patterns, manifest keys, build system |
 | `INTEGRATION_TEST_GUIDE.md` | build → unit test → integration test commands, troubleshooting |
 | `raceboat/documentation/ChannelAndLinkProperties.md`, `raceboat/test/integration/TESTING_NEW_PLUGINS.md` | framework-owned references (authoritative if they disagree with anything here) |
-| `PHASE1_…`, `PHASE2_…`, `PHASE3_…`, `PHASE4_IMPLEMENTATION_STEPS.md`, `PHASE4_TRANSPORT_COMPONENT_DESIGN.md` | **templates for each phase's deliverable** (what to answer, which manifest/code values it fixes), with AWS S3 / `plugins/skyhook` as the worked example. Write the real documents for your service as `HIGH_LEVEL_DESIGN.md`, `PRECISE_DESIGN.md`, `SERVICE_INTERACTION_DESIGN.md`, `TRANSPORT_DESIGN.md`. The first two go in `designs/<name>/` (the plugin does not exist yet); in Phase 3, when the plugin is generated, move them into `<name>-transport/docs/` where all four then live. |
+| `PHASE1_…`, `PHASE2_…`, `PHASE3_…`, `PHASE4_IMPLEMENTATION_STEPS.md`, `PHASE4_TRANSPORT_COMPONENT_DESIGN.md` | **Transport templates** for each phase's deliverable (what to answer, which manifest/code values it fixes), with AWS S3 / `plugins/skyhook` as the worked example. Write the real documents for your service as `HIGH_LEVEL_DESIGN.md`, `PRECISE_DESIGN.md`, `SERVICE_INTERACTION_DESIGN.md`, `TRANSPORT_DESIGN.md`. The first two go in `designs/<name>/` (the plugin does not exist yet); in Phase 3, when the plugin is generated, move them into `<name>-transport/docs/` where all four then live. |
 | `TRANSPORT_SERVICE_RESEARCH_AGENT.md` | specification of a Phase 1 research agent that surveys candidate services |
+| `PHASE1_ENCODING_HIGH_LEVEL_DESIGN.md`, `PHASE2_ENCODING_PRECISE_DESIGN.md`, `PHASE3_ENCODING_PROOF_OF_CONCEPT.md`, `PHASE4_ENCODING_IMPLEMENTATION_STEPS.md`, `PHASE4_ENCODING_COMPONENT_DESIGN.md` | **Encoding templates** for selecting a format tool, specifying capacity/timing, proving exact byte recovery, and implementing an `IEncodingComponent`. Use `plugins/decomposed-exemplars/source/encoding/PluginCommsTwoSixBase64Encoding.*` as the code reference. |
+| `ENCODING_TOOL_RESEARCH_AGENT.md`, `.opencode/agent/encoding-researcher.md`, `.opencode/agent/encoding-implementer.md` | encoding research and implementation agent specifications. |
+
+Generate a new encoding plugin from the template, never by editing the template in place:
+
+```bash
+python3 plugins/encoding-stub/new_encoding.py \\
+  --name Base64 \\
+  --mime-type text/plain \\
+  --max-bytes 1000000 \\
+  --encoding-time-seconds 0.25 \\
+  --out /home/ubuntu/racegen/base64-encoding
+```
+
+The MIME type, capacity, and encoding-time arguments must come from the approved design and benchmark, not from these example values. The generated source starts from the Base64 exemplar; replace its codec and MIME metadata for any other format, then update tests and rerun the full build and integration gates.
 
 ## Workspace setup (one time)
 
@@ -30,6 +46,7 @@ racegen/
 ├── raceboat/                         # raceboat framework and integration harness
 ├── plugins/
 │   ├── transport-stub/               # template used to generate new transports
+│   ├── encoding-stub/                 # template used to generate new encoding plugins
 │   ├── skyhook/                      # published AWS S3 transport example
 │   └── decomposed-exemplars/          # file-based user model and other examples
 └── <name>-transport/                 # generated transport; sibling of raceboat/
@@ -49,7 +66,7 @@ git clone https://github.com/tst-race/decomposed-exemplars.git plugins/decompose
 
 If a destination already exists, keep that checkout and do not run its `git clone` command again. Use `plugins/transport-stub` as the canonical template, `plugins/skyhook` for an implemented service transport and `plugins/decomposed-exemplars` for User Model/action-file patterns. Keep the framework checkout at `raceboat/`; the adapter and scenario runner expect to find it there or in a parent directory.
 
-## Implementation workflow (in order)
+## Transport implementation workflow (in order)
 
 Four sequential phases. Each produces a markdown design doc + code.
 
@@ -82,12 +99,27 @@ Four sequential phases. Each produces a markdown design doc + code.
 - Produce: design document (functionality, security, nuances) + Component Integration document (User Model interaction types + Encoding content types/parameters; template in the stub's `DEVELOPER_GUIDE.md`).
 - Build, run the unit tests, then run the four integration scenarios; fix errors until all pass. **A transport is not done until `test/run_scenarios.py` reports every scenario PASSED.**
 
+## Encoding component workflow (in order)
+
+Encoding components are separate from transport plugins. The seed is a **declared content format** (for example, PNG, JPEG, text, MP4, or a model-file format), and the work evaluates ordinary format encoders/decoders or serializers that produce that format. The supported scope is transparent format conversion/serialization with exact byte recovery. Cover-file steganography, concealment, stealth/fingerprint ranking, and evasion of detection are out of scope.
+
+Follow the four encoding templates in order; each phase produces its design or implementation deliverable:
+
+1. **High-level design:** survey candidate libraries/tools that can produce and parse the requested format. Compare format support, input requirements, platform/runtime fit, licensing, maintenance, and testability. Write `designs/<format>/ENCODING_HIGH_LEVEL_DESIGN.md`.
+2. **Precise design:** select a tool and specify parameters, format validation, actual payload capacity, dependencies, and benchmark conditions. Establish the exact meaning/units of `EncodingProperties.encodingTime` from the framework consumer before assigning it; do not infer units or timing semantics from the field name. Write `ENCODING_PRECISE_DESIGN.md`.
+3. **Proof of concept:** create a runnable, isolated encode/decode round trip and tests for arbitrary bytes, malformed input, empty input, and capacity boundaries. Measure and document timing on the target runtime. Write `ENCODING_PROOF_OF_CONCEPT.md`.
+4. **Encoding plugin:** implement `IEncodingComponent`, following the base64 example in `plugins/decomposed-exemplars`. Report the actual MIME type, a defensible `maxBytes` for each parameter set, and the scheduler-compatible encoding-time value. Test first with the existing `twoSixIndirect` transport and the new encoding selected in a dedicated composition; then test compatibility with a chosen content-format transport. Do not claim service-transformation robustness unless it is an ordinary, documented format-compatibility check that preserves exact decoded bytes.
+
+The encoding component is not complete until encode/decode round-trip tests pass, declared capacity is verified at its boundary, timing semantics and measurement conditions are recorded, and the initial `twoSixIndirect` integration passes. The later format-specific transport integration is a separate compatibility gate.
+
 ## Where the new plugin goes and what it is called
 
 ```bash
 cd /home/ubuntu/racegen
-plugins/transport-stub/new_transport.py --name <Name> --out /home/ubuntu/racegen/<name>-transport
+python3 plugins/transport-stub/new_transport.py --name <Name> --out /home/ubuntu/racegen/<name>-transport
 ```
+
+Invoke the generator with `python3` rather than executing the script directly, so setup does not depend on its executable bit. If Python cannot read the script or write the destination, do not change ownership or broaden permissions; ask the workspace owner to run the command or provide the intended access.
 
 - **Location:** `/home/ubuntu/racegen/<name>-transport/`, a sibling of `raceboat/` and `plugins/` (`<name>` = `<Name>` with a lower-case first letter). `plugins/` is reserved for the framework-team plugins that are already published. Keep the plugin directly under the racegen directory (or `plugins/`): the adapter and `run_scenarios.py` locate `raceboat/` by searching parent directories, and the plugin is registered in `raceboat/test/integration/plugin_registry.json` by a relative path (done by `run_scenarios.py`).
 - **`--name`:** CamelCase, letters and digits only, taken from the service (`S3`, `Mastodon`, `Redis`). It must not collide with an existing composition id (check `python3 raceboat/test/integration/generate_scenario.py --list-channels listener`).
@@ -97,11 +129,11 @@ plugins/transport-stub/new_transport.py --name <Name> --out /home/ubuntu/racegen
 
 ## Credentials for the service (`.env`)
 
-Whatever credentials the new transport needs (tokens, keys, usernames, endpoints) live in `/home/ubuntu/racegen/.env` (gitignored, one `NAME=value` per line). There is no template for it, because the variable names depend on the service.
+Whatever credentials the new transport needs (tokens, keys, usernames, endpoints) must be available to the process that runs the real-service test. A developer may keep them in `/home/ubuntu/racegen/.env` (gitignored, one `NAME=value` per line) or use their approved environment/secret injection method. There is no template for `.env`, because the variable names depend on the service.
 
 - **Naming:** use `<NAME>_*` (e.g. `<NAME>_TOKEN`, `<NAME>_SERVER`), matching the generated plugin's environment variables.
-- **Discover, don't guess:** from Phase 2 on, state exactly which variables the design needs and ask the developer to add them to `.env`. Check whether a variable is *set* by name (`grep -q '^NAME=' .env`) without printing values. Reuse credentials already in `.env` from earlier stub tests before asking again.
-- **Never read or echo the values.** `.env` is denied to the file-read tool; do not `cat` it or paste values into files, logs, docs, command lines or chat. Load it only into the environment of the process that needs it: `set -a; . ./.env; set +a`.
+- **Discover, don't guess:** state exactly which variables the design needs and ask the developer to make them available. Check only whether the required environment variables are present in the process; do not probe `.env` with file tools, `grep`, `stat`, or other commands.
+- **Do not access secrets:** never read, echo, log, or copy `.env` values. Do not change its ownership or permissions. If credentials are not available to the agent process, ask the developer to run the real-service command in their own shell with credentials loaded, or to provide them through the approved environment mechanism. Continue with credential-free unit/mock tests where possible.
 - **Inject, don't embed:** code reads parameters passed by the SDK; adapters pass `${ENV_VAR}` placeholders to docker compose. Nothing but the variable name may appear in committed or generated files.
 
 ## Build & test (the one canonical sequence)
@@ -111,9 +143,10 @@ Run from the plugin directory. `TAG` is the image tag you built raceboat's image
 ```bash
 ./build_artifacts_in_docker_image.sh --image-tag TAG   # plugin -> kit/artifacts/linux-<arch>-{client,server}/<PluginName>/
 ./run_unit_tests.sh --image-tag TAG                    # gtest: built in the builder image, run in the runtime image
-set -a; . /home/ubuntu/racegen/.env; set +a            # service credentials, if the service needs any
 ./test/run_scenarios.py --image-tag TAG                # registers plugin, installs scenarios, runs all, saves logs
 ```
+
+For real-service scenarios that need credentials, run the final command in a developer-owned shell where the required variables are already available. If the developer uses `.env`, they may load it in that shell before running the scenario command; do not ask the agent to read or change `.env`. If variables are unavailable, report the missing variable names only and defer the real-service run.
 
 Details, flags and troubleshooting: `INTEGRATION_TEST_GUIDE.md`. If you change raceboat itself, rebuild its images first (`raceboat/test/integration/BUILD_TEST_GUIDE.md`).
 

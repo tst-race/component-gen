@@ -32,7 +32,7 @@ The generated transport lives in `<name>-transport/`, next to `raceboat/` and `p
 
 ## Credentials for the target service
 
-If the service needs credentials, put them in `.env` at the repository root (gitignored), one `NAME=value` per line. The names depend on the service; the Phase 2 agent lists the ones it needs (`<NAME>_TOKEN`, ...) and asks you to add them. The agents never read or print `.env`: it is loaded only into the environment of the build and test commands (`set -a; . ./.env; set +a`) and reaches the plugin as parameters. Never commit it.
+If the service needs credentials, make the required variables available to the process running the real-service tests, using your own shell or an approved environment/secret injection method. You may keep local credentials in `.env` at the repository root (gitignored), but agents must not read or probe that file or change its permissions. The Phase 2 agent lists the required variable names; never commit credentials or put them in code, manifests, scenarios, docs or logs.
 
 ## Layout
 

@@ -8,7 +8,7 @@ How to build a transport plugin and run its unit and integration tests. Every co
 |---|---|
 | Docker images `ghcr.io/tst-race/raceboat/raceboat-plugin-builder:TAG` and `…/raceboat-runtime:TAG` | `docker images \| grep raceboat` |
 | `decomposed-exemplars` built (supplies `twoSixFileBasedUserModel`, `noop` encoding, and the `twoSixIndirectComposition` used by mixed scenarios) | `ls plugins/decomposed-exemplars/kit/artifacts/linux-*-server/` |
-| Service credentials, if the service needs any, in `/home/ubuntu/racegen/.env` (gitignored) | `grep -c . .env` |
+| Service credentials, if needed, available to the process running real-service scenarios | Do not inspect `.env`; ask the developer to provision the required variables |
 
 Pick **one** image tag (`TAG`, e.g. `dev`) and use it for the builder, the runtime and `--image-tag`. Mixing tags is the most common cause of "I fixed it but the test still fails": the old runtime keeps running your old kit's expectations, or the old builder keeps linking against an old SDK. If raceboat's code changed, rebuild the images first:
 
@@ -39,9 +39,10 @@ The tests are built in the builder image and **run in the runtime image**: the b
 ## 3. Integration scenarios
 
 ```bash
-set -a; . /home/ubuntu/racegen/.env; set +a   # only if the service needs credentials
 ./test/run_scenarios.py --image-tag TAG [--scenario ID]… [--wait-time SECONDS]
 ```
+
+For a real service, run the command in a developer-owned shell where the required variables are available. If they are not available to the agent process, ask the developer to run the command or use the approved environment/secret injection mechanism. Do not read, probe, or change permissions on `.env`. Mock-service scenarios need no credentials.
 
 `test/run_scenarios.py` does, in order: registers the plugin in `raceboat/test/integration/plugin_registry.json`; copies `test/scenarios/*.json` into `raceboat/test/integration/scenarios/` (the orchestrator only reads that directory); runs `run_scenario.py` for each scenario in the order below, **stopping at the first failure**; and preserves the output plus docker logs of each run in `test/logs/<timestamp>-<scenario>/` (pass or fail; credentials are masked in these copies, `test/logs/` is gitignored).
 

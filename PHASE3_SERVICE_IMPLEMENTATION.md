@@ -32,7 +32,7 @@ Message ids must compare in post order (the cursor depends on it) or the cursor 
 
 ## 4. Credentials for this phase
 
-Ask the developer for what the service needs, keep it in `/home/ubuntu/racegen/.env` (gitignored) or the environment, and reuse it for the Phase 4 integration test. Never put it in code, manifests, scenario files, docs or logs. In Phase 4 the same values reach the component through `requestPluginUserInput` (`--param <composition id>.<key>`).
+List the exact environment variable names the service needs and ask the developer to make them available to the process that runs the real-service proof of concept. The developer may use `/home/ubuntu/racegen/.env` (gitignored) or an approved environment/secret injection method. Never read or probe `.env`, change its permissions, or print or copy its values. If the variables are not available to the agent process, ask the developer to run the proof-of-concept command in their own shell with credentials loaded, or provision the variables through the approved mechanism; continue with credential-free unit tests. Never put credentials in code, manifests, scenario files, docs or logs. In Phase 4 the same values reach the component through `requestPluginUserInput` (`--param <composition id>.<key>`).
 
 ## 5. Done when
 
