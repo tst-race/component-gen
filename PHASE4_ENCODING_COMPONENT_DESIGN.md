@@ -42,7 +42,7 @@ Document the shared-library target and output path, exported `createEncoding`/`d
 | Initial `twoSixIndirect` test composition | |
 | Format-specific transport compatibility result | |
 
-Document the tested composition that selects this encoding with the existing `twoSixIndirect` transport, followed by any format-specific transport compatibility test. Include exact test commands and results. Distinguish ordinary format compatibility from any unsupported claims about concealment or detection evasion.
+Document the tested composition that selects this encoding with the existing `twoSixIndirect` transport, followed by any format-specific transport compatibility test. Include exact test commands and results. 
 
 ## 7. Security and limitations
 

@@ -21,5 +21,4 @@ Do:
 Rules:
 - Do not install dependencies or download tools without approval. Use dependencies already available or stop and request the required setup.
 - Use synthetic data only. Do not send test content to external services.
-- Do not implement cover-file injection, concealment, stealth, or detection-evasion behavior.
 - Stop if the approved contract cannot be met or if a benchmark cannot be performed on the target runtime; report evidence instead of guessing.

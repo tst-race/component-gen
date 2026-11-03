@@ -21,5 +21,4 @@ Do:
 Rules:
 - Do not write code, install tools, run binaries, call service APIs, or create accounts.
 - Request approval before each external HTTP request; honor denied domains and requests.
-- Do not research or rank steganography, cover-file payload injection, concealment, stealth, detection avoidance, or evasion robustness. Keep the assessment to ordinary processing of explicitly declared content formats.
 - Stop if exact byte recovery is required but no candidate supports it; do not substitute a lossy or unverified claim.

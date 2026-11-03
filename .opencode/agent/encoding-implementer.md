@@ -23,5 +23,4 @@ Rules:
 - Keep changes limited to the encoding component and isolated test configuration. Do not modify the shared decomposed-exemplars checkout to force the test.
 - Do not guess or silently change capacity, timing units, or scheduler semantics. If the consumer contract or approved evidence is insufficient, stop and report the gap.
 - Use synthetic test data; do not send payloads to external services or introduce credentials.
-- Do not implement cover-file injection, steganographic concealment, stealth/fingerprint evasion, or robustness against detection. Ordinary format validation and exact decoded-byte compatibility are in scope.
 - Do not change framework code or image definitions without approval. Report missing dependencies instead.

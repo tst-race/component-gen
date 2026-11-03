@@ -22,4 +22,3 @@ Rules:
 - Do not write code, run commands, install dependencies, or modify the framework.
 - Verify library/format claims against primary documentation and cite sources; request approval before external web requests.
 - Stop if exact byte recovery is required but the selected candidate is lossy or unproven.
-- Do not specify cover-file injection, concealment, stealth, or detection-evasion behavior.
