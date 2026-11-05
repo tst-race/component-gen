@@ -7,8 +7,8 @@ RACEGEN generates new **indirect transport components** for the [raceboat](https
 Requirements: `git`, `docker` (daemon running, your user allowed to use it), `python3`, `curl`.
 
 ```bash
-git clone https://github.com/tst-race/component-gen.git racegen
-cd racegen
+git clone https://github.com/tst-race/component-gen.git
+cd component-gen
 scripts/bootstrap.sh        # installs opencode if missing, clones raceboat + reference plugins, pulls images
 opencode auth login         # choose an LLM provider (credentials stay outside the repo)
 opencode                    # start in the repository root
@@ -28,7 +28,7 @@ Run the phases in order inside opencode. Each phase is a command backed by a cus
 | `/phase4 [name]` | `transport-implementer` | the transport component, action files, adapter and scenarios, `TRANSPORT_DESIGN.md` with the Component Integration section; all four integration scenarios passing |
 | `/integ-test <name> [scenario ...]` | `transport-implementer` | rebuild and rerun scenarios, diagnosing failures |
 
-The generated transport lives in `<name>-transport/`, next to `raceboat/` and `plugins/`. It is its own project (`git init` inside it) and is ignored by this repository.
+The generated transport lives in `./<name>-transport/`, next to `raceboat/` and `plugins/`, inside this repository's working directory. It is its own project (`git init` inside it) and is ignored by this repository.
 
 ## Credentials for the target service
 

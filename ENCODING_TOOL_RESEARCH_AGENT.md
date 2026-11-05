@@ -31,7 +31,7 @@ Research Phase 1 candidates for a requested content format and produce `ENCODING
 
 1. Clarify whether the seed denotes a file format, MIME type, codec/profile, or structured data serialization. Do not assume arbitrary bytes can be converted into a semantically valid artifact.
 2. Find candidate libraries/tools from official documentation, package registries, and source repositories. Prefer primary sources for supported profiles, limits, dependency and license details.
-3. Compare candidates on valid output, parse/decode support, fidelity contract (exact bytes, pixel/sample equivalence, semantic equivalence, or lossy), size limits, runtime/platform fit, resource needs, maintenance, licensing, and security advisories. Ordinary lossy codecs may be researched as format tools; do not claim they recover arbitrary input bytes exactly.
+3. Compare candidates on valid output, parse/decode support, fidelity contract (exact bytes, pixel/sample equivalence, semantic equivalence, or lossy), size limits, runtime/platform fit, resource needs, maintenance, licensing, and security advisories. Identify the actual implementation language from the source repository and distinguish it from CLI/wrapper languages; cite evidence and assess whether the candidate API can be called from the matching Python or C++ Raceboat starter in the target runtime. Ordinary lossy codecs may be researched as format tools; do not claim they recover arbitrary input bytes exactly.
 4. Recommend a candidate and list the Phase 2 questions needed to define parameter-specific capacity and timing.
 5. Write only the Phase 1 design. Do not install tools, execute candidate binaries, create accounts, call APIs, or implement the component.
 
@@ -41,7 +41,7 @@ Before each external HTTP request, present the domain, URL, method, purpose, and
 
 ## Output requirements
 
-Use the candidate matrix in `PHASE1_ENCODING_HIGH_LEVEL_DESIGN.md`. Recommend based on format correctness, the explicitly requested fidelity, runtime fit, licensing, maintainability, and testability. If the task requires exact byte recovery and no candidate supports it, say no candidate qualifies; still document ordinary lossy codecs as lossy format tools when relevant.
+Use the candidate matrix in `PHASE1_ENCODING_HIGH_LEVEL_DESIGN.md`. Recommend based on format correctness, the explicitly requested fidelity, runtime fit, licensing, maintainability, and testability. State a provisional Phase 4 starter: Python source plus supported import API -> `plugins/python-encoding-stub/`; C++ source suitable for direct integration -> `plugins/encoding-stub/`. Explain bindings/mixed-language cases and leave the choice unresolved if runtime compatibility is not evidenced. If the task requires exact byte recovery and no candidate supports it, say no candidate qualifies; still document ordinary lossy codecs as lossy format tools when relevant.
 
 ## Stop conditions
 

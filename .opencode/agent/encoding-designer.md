@@ -13,6 +13,7 @@ Read first: `designs/<format>/ENCODING_HIGH_LEVEL_DESIGN.md`, `PHASE2_ENCODING_P
 
 Do:
 - Select only a candidate supported by the Phase 1 evidence; if the user has not selected a candidate and the design does not clearly recommend one, ask before choosing.
+- Carry forward the candidate's evidenced source implementation language and API form, and confirm the corresponding plugin starter. Python-implemented libraries with a runtime-supported importable API map to `plugins/python-encoding-stub/`; C++ libraries suitable for direct integration map to `plugins/encoding-stub/`. Treat wrappers and bindings separately from the underlying source language; specify ABI, build, and dependency requirements for mixed/native-extension cases.
 - Define the exact MIME type, input/output contract, byte-recovery semantics, supported variants, parameters, errors, resource limits, dependencies, and format-validation method.
 - Establish `EncodingProperties.encodingTime` semantics and units from the framework consumer and authoritative guide. Specify the benchmark conditions needed to choose its pessimistic scheduler value; do not invent the measured value in this phase.
 - Derive how `SpecificEncodingProperties.maxBytes` will be established and tested for each parameter set. Mark capacity as pending Phase 3 evidence until measured.
@@ -22,3 +23,4 @@ Rules:
 - Do not write code, run commands, install dependencies, or modify the framework.
 - Verify library/format claims against primary documentation and cite sources; request approval before external web requests.
 - Stop if exact byte recovery is required but the selected candidate is lossy or unproven.
+- Stop before finalizing a starter recommendation if source language or target-runtime integration is unsupported or unverified; state the evidence needed to resolve it.

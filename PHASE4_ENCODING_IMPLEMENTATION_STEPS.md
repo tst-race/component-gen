@@ -2,6 +2,32 @@
 
 Implement a Raceboat `IEncodingComponent` from the approved Phase 2 design and Phase 3 proof of concept. Use `plugins/decomposed-exemplars/source/encoding/PluginCommsTwoSixBase64Encoding.{h,cpp}` as the primary reference, along with `PluginCommsTwoSixNoopEncoding` for identity behavior and the authoritative interfaces in `raceboat/include/race/decomposed/`.
 
+## Select the plugin starter
+
+Before generating files, use the Phase 1–3 evidence to identify the adapted library's actual source implementation language and the exact API path exercised by the proof of concept. Do not infer the library language from a CLI, wrapper, or package name.
+
+- Use `plugins/python-encoding-stub/new_encoding.py` when the library is implemented in Python and its supported importable API is available in the target Raceboat runtime. Pin dependencies and verify any native extension against the runtime's Python ABI, architecture, and OS. Follow `plugins/python-encoding-stub/README.md` for generation, packaging, and callback conventions.
+- Use `plugins/encoding-stub/new_encoding.py` when the library is implemented in C++ and can be integrated through the C++ plugin build. Follow the stub README and developer guide.
+- For a library with Python bindings to native code or a mixed implementation, use only the integration path demonstrated by the Phase 3 proof and approved in Phase 2. A Python wrapper does not by itself establish that the Python starter is compatible; likewise, a Python library does not become a C++ candidate merely because a CLI exists.
+- If the library uses another language or neither starter supports the proven API/runtime path, stop before generation and report the required starter or interoperability work. Do not silently substitute a different library or subprocess-based implementation.
+
+Record the selected starter, source-language evidence, and generator invocation in the Phase 4 deliverable.
+
+## Offline output capture for integration tests
+
+Both starter adapters include an optional `save-encoded-output` user setting,
+default false. For the dedicated integration composition only, declare it in
+the test manifest's `channel_parameters` as `type: bool`, `required: false`,
+`default: false`, with `plugin` set to that composition's id. Add
+`<composition-id>.save-encoded-output=true` to the `NodeContribution.params`
+for every participant in the integration scenario. This ensures both encoding
+components save successful encoded output beneath their own
+`PluginConfig.loggingDirectory/encoding-outputs/` for later offline inspection.
+Verify the files are present and readable. Do not edit the generated plugin's
+default or the shared `plugins/decomposed-exemplars` manifest to turn this on.
+Use synthetic payloads and handle the output as test data requiring suitable
+access control and cleanup.
+
 | Step | Work | Acceptance check |
 |---|---|---|
 | 1. Contract | Confirm `EncodingProperties`, `SpecificEncodingProperties`, callback, and error semantics against the framework headers and consumers | MIME type, timing meaning/units, capacity contract are recorded |

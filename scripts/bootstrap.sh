@@ -59,7 +59,7 @@ mkdir -p "$ROOT/plugins"
 clone https://github.com/tst-race/raceboat.git "$ROOT/raceboat"
 # transport-stub is the template for new transports, decomposed-exemplars supplies
 # the user model and encodings, skyhook is a real-service reference transport.
-for p in transport-stub decomposed-exemplars skyhook encoding-stub; do
+for p in transport-stub decomposed-exemplars skyhook encoding-stub python-encoding-stub; do
     clone "https://github.com/tst-race/$p.git" "$ROOT/plugins/$p"
 done
 

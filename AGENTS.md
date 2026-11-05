@@ -15,7 +15,7 @@ The seed service idea is provided externally; the implementation flows from that
 |---|---|
 | `AGENTS.md` (this file) | workflow, rules, gotchas |
 | `plugins/transport-stub/README.md`, `DEVELOPER_GUIDE.md` | the template and the exact steps to turn it into a new transport |
-| `plugins/encoding-stub/README.md` | the encoding plugin template, Base64 reference, tests, and `new_encoding.py` generator |
+| `plugins/encoding-stub/README.md`, `plugins/python-encoding-stub/README.md` | C++ and Python encoding plugin templates, generators, tests, and packaging guidance; choose based on the adapted library's source implementation language and proven target-runtime API path |
 | `RACEBOAT_PLUGIN_DEVELOPMENT_GUIDE.md` | verified API signatures, canonical code patterns, manifest keys, build system |
 | `INTEGRATION_TEST_GUIDE.md` | build → unit test → integration test commands, troubleshooting |
 | `raceboat/documentation/ChannelAndLinkProperties.md`, `raceboat/test/integration/TESTING_NEW_PLUGINS.md` | framework-owned references (authoritative if they disagree with anything here) |
@@ -32,7 +32,7 @@ python3 plugins/encoding-stub/new_encoding.py \\
   --mime-type text/plain \\
   --max-bytes 1000000 \\
   --encoding-time-seconds 0.25 \\
-  --out /home/ubuntu/racegen/base64-encoding
+  --out ./base64-encoding
 ```
 
 The MIME type, capacity, and encoding-time arguments must come from the approved design and benchmark, not from these example values. The generated source starts from the Base64 exemplar; replace its codec and MIME metadata for any other format, then update tests and rerun the full build and integration gates.
@@ -42,14 +42,15 @@ The MIME type, capacity, and encoding-time arguments must come from the approved
 Start from the root of a clone of this repository. The workspace must contain the raceboat framework checkout and three independent plugin checkouts: the transport template, a published real-service example, and the decomposed user-model example. Create this layout before building or generating a transport:
 
 ```text
-racegen/
+<repository-root>/
 ├── raceboat/                         # raceboat framework and integration harness
 ├── plugins/
 │   ├── transport-stub/               # template used to generate new transports
 │   ├── encoding-stub/                 # template used to generate new encoding plugins
 │   ├── skyhook/                      # published AWS S3 transport example
 │   └── decomposed-exemplars/          # file-based user model and other examples
-└── <name>-transport/                 # generated transport; sibling of raceboat/
+├── <name>-transport/                 # generated transport; sibling of raceboat/
+└── <format>-encoding/                # generated encoding plugin
 ```
 
 From the repository root, clone any missing checkouts into these exact destinations. These are separate Git repositories; do not clone them inside the generated transport or move them under another plugin:
@@ -105,33 +106,32 @@ Encoding components are separate from transport plugins. The seed is the name of
 
 Invoke encoding work with `/encoding-phase1 <format>`, `/encoding-phase2 <format>`, `/encoding-phase3 <format>`, and `/encoding-phase4 <format>`. Run them in order; each phase reads the previous phase's deliverable. Phase 1 through Phase 3 artifacts live under `designs/<format>/`; Phase 4 generates `<format>-encoding/` and carries the approved design documents into its `docs/` directory.
 
-Each phase produces its design or implementation deliverable:
+Each phase produces its design or implementation deliverable. Phase 1 records the candidate library's actual source language and API form; Phase 2 confirms the plugin integration path; Phase 3 proves that path in the target runtime. Phase 4 uses `plugins/python-encoding-stub/` for Python-implemented libraries with supported import APIs and `plugins/encoding-stub/` for C++ libraries suitable for direct integration. Do not infer the library language from a wrapper or CLI; stop if neither starter supports the proven integration path.
 
 1. **High-level design:** survey candidate libraries/tools that can produce and parse the requested content format. Compare format support, input requirements, platform/runtime fit, licensing, maintenance, and testability. Write `designs/<format>/ENCODING_HIGH_LEVEL_DESIGN.md`.
 2. **Precise design:** select a tool and specify parameters, format validation, actual payload capacity, dependencies, and benchmark conditions. Establish the exact meaning/units of `EncodingProperties.encodingTime` from the framework consumer before assigning it; do not infer units or timing semantics from the field name. Write `ENCODING_PRECISE_DESIGN.md`.
-3. **Proof of concept:** create a runnable, isolated encode/decode round trip and tests for arbitrary bytes, malformed input, empty input, and capacity boundaries. Measure and document timing on the target runtime. Write `ENCODING_PROOF_OF_CONCEPT.md`.
-4. **Encoding plugin:** implement `IEncodingComponent`, following the base64 example in `plugins/decomposed-exemplars`. Report the actual MIME type, a defensible `maxBytes` for each parameter set, and the scheduler-compatible encoding-time value. Test first with the existing `twoSixIndirect` transport and the new encoding selected in a dedicated composition; then test compatibility with a chosen content-format transport. Do not claim service-transformation robustness unless it is an ordinary, documented format-compatibility check that preserves exact decoded bytes.
+3. **Proof of concept:** create a runnable, isolated encode/decode round trip and tests for arbitrary bytes, malformed input, empty input, and capacity boundaries. Measure and document timing on the target runtime. Persist representative encoded content (typical and boundary cases) under `designs/<format>/poc/test-output/` so the developer can inspect it with independent tools after the run; use synthetic inputs and record the paths. Write `ENCODING_PROOF_OF_CONCEPT.md`.
+4. **Encoding plugin:** implement `IEncodingComponent`, following the base64 example in `plugins/decomposed-exemplars`. Report the actual MIME type, a defensible `maxBytes` for each parameter set, and the scheduler-compatible encoding-time value. The C++ and Python starter plugins include an optional `save-encoded-output` user setting, default false, which writes successful encoded bytes under the component logging directory when enabled. In the dedicated integration-test composition only, declare this as an optional boolean channel parameter (default false) and set `<composition id>.save-encoded-output=true` for every participating node; verify and inspect the resulting files for offline analysis. Keep the shared exemplar unchanged and use synthetic test payloads. Test first with the existing `twoSixIndirect` transport and the new encoding selected in a dedicated composition; then test compatibility with a chosen content-format transport. Do not claim service-transformation robustness unless it is an ordinary, documented format-compatibility check that preserves exact decoded bytes.
 
 The encoding component is not complete until encode/decode round-trip tests pass, declared capacity is verified at its boundary, timing semantics and measurement conditions are recorded, and the initial `twoSixIndirect` integration passes. The later format-specific transport integration is a separate compatibility gate.
 
 ## Where the new plugin goes and what it is called
 
 ```bash
-cd /home/ubuntu/racegen
-python3 plugins/transport-stub/new_transport.py --name <Name> --out /home/ubuntu/racegen/<name>-transport
+python3 plugins/transport-stub/new_transport.py --name <Name> --out ./<name>-transport
 ```
 
 Invoke the generator with `python3` rather than executing the script directly, so setup does not depend on its executable bit. If Python cannot read the script or write the destination, do not change ownership or broaden permissions; ask the workspace owner to run the command or provide the intended access.
 
-- **Location:** `/home/ubuntu/racegen/<name>-transport/`, a sibling of `raceboat/` and `plugins/` (`<name>` = `<Name>` with a lower-case first letter). `plugins/` is reserved for the framework-team plugins that are already published. Keep the plugin directly under the racegen directory (or `plugins/`): the adapter and `run_scenarios.py` locate `raceboat/` by searching parent directories, and the plugin is registered in `raceboat/test/integration/plugin_registry.json` by a relative path (done by `run_scenarios.py`).
+- **Location:** `./<name>-transport/`, inside this repository's working directory and alongside `raceboat/` and `plugins/` (`<name>` = `<Name>` with a lower-case first letter). `plugins/` is reserved for the framework-team plugins that are already published. The adapter and `run_scenarios.py` locate `raceboat/` by searching parent directories, and the plugin is registered in `raceboat/test/integration/plugin_registry.json` by a relative path (done by `run_scenarios.py`).
 - **`--name`:** CamelCase, letters and digits only, taken from the service (`S3`, `Mastodon`, `Redis`). It must not collide with an existing composition id (check `python3 raceboat/test/integration/generate_scenario.py --list-channels listener`).
 - **Derived names** (all consistent by construction; do not rename by hand): kit directory / manifest `file_path` / CMake `PLUGIN_NAME` `Plugin<Name>`, library `libPlugin<Name>.so`, transport id `<name>`, composition id and channel gid `<name>Composition`, client class `<Name>Client`, environment variables `<NAME>_SERVER` / `<NAME>_TOKEN`, scenario ids `<name>-send-only`, `-send-recv`, `-client-connect`, `-mixed-client-connect`.
 - **Collisions to avoid:** pick Docker subnets for the scenarios that no other scenario uses (`raceboat/test/integration/scenarios/*.json`; the template uses 10.30.x.0), and keep service-side container names scenario-specific.
-- The generator does not create a git repository. Version the plugin on its own (`git init` inside it, as `plugins/transport-stub` is) and do not add it to the racegen root repo; there it shows up as an untracked directory.
+- The generator does not create a git repository. Version the plugin on its own (`git init` inside it, as `plugins/transport-stub` is) and do not commit it to this repository.
 
 ## Credentials for the service (`.env`)
 
-Whatever credentials the new transport needs (tokens, keys, usernames, endpoints) must be available to the process that runs the real-service test. A developer may keep them in `/home/ubuntu/racegen/.env` (gitignored, one `NAME=value` per line) or use their approved environment/secret injection method. There is no template for `.env`, because the variable names depend on the service.
+Whatever credentials the new transport needs (tokens, keys, usernames, endpoints) must be available to the process that runs the real-service test. A developer may keep them in `.env` at the repository root (gitignored, one `NAME=value` per line) or use their approved environment/secret injection method. There is no template for `.env`, because the variable names depend on the service.
 
 - **Naming:** use `<NAME>_*` (e.g. `<NAME>_TOKEN`, `<NAME>_SERVER`), matching the generated plugin's environment variables.
 - **Discover, don't guess:** state exactly which variables the design needs and ask the developer to make them available. Check only whether the required environment variables are present in the process; do not probe `.env` with file tools, `grep`, `stat`, or other commands.

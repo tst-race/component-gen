@@ -4,6 +4,8 @@
 
 ## 1. Format contract
 
+Record the selected library's source implementation language and the API form the component will call. Confirm the Phase 1 starter recommendation: Python source with a supported importable API maps to `plugins/python-encoding-stub/`; C++ source suitable for direct integration maps to `plugins/encoding-stub/`. For bindings, native extensions, or mixed-language libraries, specify which layer the plugin calls and verify the target-runtime compatibility and build/install path. If neither starter is appropriate, document the required alternative and stop before Phase 4 generation.
+
 | Property | Decision and evidence |
 |---|---|
 | Format name and version/profile | |

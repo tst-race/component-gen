@@ -1,10 +1,9 @@
 # Phase 4 — Implementation Steps
 
-Build the raceboat transport component from the Phase 2 design and the Phase 3 `ServiceClient`. Start from the template, not from scratch:
+From the repository root, build the raceboat transport component from the Phase 2 design and the Phase 3 `ServiceClient`. Start from the template, not from scratch:
 
 ```bash
-cd /home/ubuntu/racegen
-python3 plugins/transport-stub/new_transport.py --name <Name> --out /home/ubuntu/racegen/<name>-transport
+python3 plugins/transport-stub/new_transport.py --name <Name> --out ./<name>-transport
 ```
 
 Then follow `plugins/transport-stub/DEVELOPER_GUIDE.md` (the detailed, command-level version of these steps). Reference for API signatures and patterns: `RACEBOAT_PLUGIN_DEVELOPMENT_GUIDE.md`. For a real-service example of the same structure, read `plugins/skyhook`.

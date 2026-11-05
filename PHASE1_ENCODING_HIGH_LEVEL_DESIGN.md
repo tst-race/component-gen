@@ -10,7 +10,7 @@ Record the requested format, intended input bytes/data model, expected output ar
 
 Compare at least two viable candidates when available. Cite primary documentation for claims.
 
-| Candidate | Exact format/profile | Input and output contract | Encode and decode support | Runtime/dependencies | License and maintenance | Evidence/open questions |
+| Candidate | Exact format/profile | Input and output contract | Encode and decode support | Source language and API form | Runtime/dependencies | License and maintenance | Evidence/open questions |
 |---|---|---|---|---|---|---|
 | | | | | | | |
 
@@ -21,11 +21,14 @@ Assess:
 - Supported dimensions, profiles, metadata, color/audio/video/model variants, and version constraints as applicable.
 - Whether decoding recovers the original bytes exactly or only an equivalent/lossy representation.
 - Platform support, resource needs, installability in the project build/runtime images, licensing, maintenance, and security advisories.
+- The candidate library's actual source implementation language, supported API forms (for example, Python import, C++ library, language binding, or CLI), and source evidence. Distinguish the library implementation from a wrapper or command-line frontend. Assess compatibility with the appropriate Python or C++ plugin starter and the target runtime, including native-extension ABI requirements.
 - Known size limits and whether those are library, format, memory, or Raceboat limits.
 
 ## 3. Recommendation
 
 Recommend a candidate based on verified format correctness, the requested fidelity contract, runtime fit, maintainability, and testability. Distinguish exact byte recovery from pixel/sample/semantic equivalence and lossy output. If exact arbitrary-byte recovery is required and no candidate supports it, report that no candidate qualifies.
+
+State the expected Phase 4 starter: `plugins/python-encoding-stub/` for a Python-implemented library with an importable API supported by the target runtime, or `plugins/encoding-stub/` for a C++-implemented library suitable for direct C++ integration. Cite the source-language evidence. For mixed implementations, Python bindings to native code, or other languages, explain the chosen integration path and what must be proven in Phase 2/3; do not make a starter choice from the wrapper language alone.
 
 ## 4. Phase 2 questions
 
