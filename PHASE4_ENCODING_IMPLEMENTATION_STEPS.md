@@ -28,6 +28,32 @@ default or the shared `plugins/decomposed-exemplars` manifest to turn this on.
 Use synthetic payloads and handle the output as test data requiring suitable
 access control and cleanup.
 
+## Required integration scenarios
+
+Use the new encoding in a dedicated composition with the existing
+`twoSixIndirect` transport. Create and run all three scenarios, matching the
+transport synthesis workflow's basic traffic modes:
+
+| Scenario | Harness mode | Connector / listener CLI | Required evidence |
+|---|---|---|---|
+| Send-only | `send` | `--send` / `--recv` | Exact synthetic message received; sender's encoded artifacts saved and validated |
+| Request/reply | `send-recv` | `--send-recv` / `--recv-reply` | Exact request and reply received; encoded artifacts from both nodes saved and validated |
+| Persistent socket proxy | `client-connect` | `--client-connect` / `--server-connect` | Socket client/server stubs exchange exact synthetic messages in both directions; encoded artifacts from both nodes saved and validated |
+
+Enable output capture on every participating node in all three scenarios; a
+receive-only node need not produce an encoded artifact. Preserve commands,
+results, node logs, and artifacts in separate per-scenario run directories
+before reruns can overwrite them. Record actual host capture paths derived
+from `PluginConfig.loggingDirectory`, not assumed application log paths.
+Independently validate the saved content format and require the harness's
+application-message checks to pass. Empty-output captures alone do not prove
+the application payload was encoded.
+
+Do not replace a failed client/server-connect scenario with send-recv or stop
+after one passing just-send test. Diagnose and fix each failing mode; if a mode
+is blocked, report the blocker and mark Phase 4 incomplete. The later
+format-specific transport compatibility test remains a separate gate.
+
 | Step | Work | Acceptance check |
 |---|---|---|
 | 1. Contract | Confirm `EncodingProperties`, `SpecificEncodingProperties`, callback, and error semantics against the framework headers and consumers | MIME type, timing meaning/units, capacity contract are recorded |
@@ -37,7 +63,7 @@ access control and cleanup.
 | 5. Plugin package | Provide the shared-library factory exports, `raceVersion`, CMake target, and manifest registration for the encoding name | plugin builds and the Raceboat loader can create/destroy the encoding |
 | 6. Unit tests | Use `MockEncodingSdk` or an equivalent capturing fake to exercise exact byte round trips, formats, failures, capacity boundaries, and callbacks | focused component suite passes |
 | 7. Kit validation | Build the plugin artifact and inspect its manifest/library registration | expected library and encoding name are present in the generated kit |
-| 8. Initial integration | Use the new encoding in a dedicated composition with the existing `twoSixIndirect` transport; keep the transport and user model unchanged | a test message round-trips through the composition |
+| 8. Initial integration | Run send-only, send-recv/recv-reply, and client/server-connect scenarios using the new encoding in a dedicated `twoSixIndirect` composition; keep the transport and user model unchanged | all three scenarios pass with exact application-message delivery and separately preserved logs and expected encoded artifacts |
 | 9. Format integration | Pair the encoding with a transport that declares the matching content type | payload is accepted, transmitted, parsed, and recovered exactly |
 | 10. Documents | Write the component design and integration contract | complete `PHASE4_ENCODING_COMPONENT_DESIGN.md` checklist |
 
@@ -51,12 +77,14 @@ An `IEncodingComponent` implementation and a passing mock-SDK harness are necess
 - Register the encoding name in `createEncoding`, reject unknown names, and expose the expected Race version symbol as the local plugin convention requires.
 - Build the shared library with the plugin builder's CMake conventions and include it in a manifest whose `shared_library_path` and `encodings` entries match the actual artifact and registered name.
 - Include that manifest and library in the generated kit, then prove Raceboat can load and instantiate it.
-- Include a dedicated composition-level test. The existing decomposed-exemplars `twoSixIndirectComposition` currently selects `base64`; do not assume it selects `noop` or mutate the shared composition. Add an isolated composition that selects the new encoding.
+- Include all three dedicated composition-level integration scenarios listed above. The existing decomposed-exemplars `twoSixIndirectComposition` currently selects `base64`; do not assume it selects `noop` or mutate the shared composition. Add an isolated composition that selects the new encoding.
 
 There is no encoding-specific generator in this workflow yet. Until one is added, make the package structure and factory registration explicit in the implementation task and record the exact source/build files used. Do not call a component-only executable or test fixture a completed plugin.
 
 ## Implementation rules
 
+- Audit and cite all outside code, including adapted snippets and imported/linked dependencies: upstream source URL, exact version/commit, license evidence, local path, and modifications. Check license compatibility before reuse. Preserve upstream copyright/license headers and LICENSE/NOTICE texts; prepend accurate language-appropriate attribution/license headers to vendored/adapted files missing them, following upstream requirements. Do not invent copyright ownership or license grants, or alter installed dependency sources. Package required notices and full license texts in distributed kits. Unresolved permissions/compatibility block completion.
+- An empty-payload `encodeBytes` request must succeed and call `onBytesEncoded` exactly once with `ENCODE_OK` and valid content for the declared format/parameters, even when no application message was queued. `decodeBytes` of that carrier must complete once with `ENCODE_OK` and zero message bytes, not framing, padding, or filler. A valid no-message image must be an actual image, not an empty file; empty Base64 text is format-valid. Verify real codec empty round trips, independent format validation, callbacks, and persisted zero-message artifacts. Empty input alone is never a failure or reason to skip a callback; actual codec/I/O errors still report failure.
 - Keep format-library calls behind small helpers where that matches local code; do not duplicate codecs already available in the project.
 - Use `sdk->onBytesEncoded` / `sdk->onBytesDecoded` as specified by `IEncodingSdk`; return promptly if the SDK contract requires asynchronous work, and do not call a completion callback more than once.
 - Do not claim exact recovery for lossy formats. Do not treat MIME type as proof of output validity.
@@ -65,4 +93,4 @@ There is no encoding-specific generator in this workflow yet. Until one is added
 
 ## Completion criteria
 
-The implementation is complete when unit tests prove byte-exact recovery and capacity boundaries, the declared timing value is justified by both source semantics and runtime measurements, and the `twoSixIndirect` composition test passes. Record format-specific transport compatibility separately; it is not evidence of resistance to detection or of covert-channel resilience.
+The implementation is complete when unit tests prove byte-exact recovery and capacity boundaries, the declared timing value is justified by both source semantics and runtime measurements, and all three `twoSixIndirect` composition scenarios (send-only, send-recv/recv-reply, and client/server-connect) pass with per-scenario logs and validated encoded artifacts preserved. A failed, skipped, or blocked mode leaves Phase 4 incomplete. Record format-specific transport compatibility separately; it is not evidence of resistance to detection or of covert-channel resilience.

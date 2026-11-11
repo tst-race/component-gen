@@ -17,6 +17,13 @@ State the declared content format/MIME type, supported profiles, input contract,
 
 Describe parameter fields carried by `EncodingParameters::json`, defaults, ranges, and invalid combinations. Do not include unneeded configuration.
 
+Document successful zero-message behavior for every supported parameter set:
+`encodeBytes` with no payload still completes once with `ENCODE_OK` and valid
+content in the declared format; `decodeBytes` of that content completes once
+with `ENCODE_OK` and exactly zero message bytes. Include real codec, format
+validator, callback, and saved-artifact evidence. An empty encoded file is only
+valid when the format permits it, not for images requiring an actual image.
+
 ## 3. Capacity and timing evidence
 
 Include the maximum payload table, boundary test results, generated artifact sizes, benchmark environment, encode/decode timing statistics, and the reason the returned `encodingTime` matches the framework consumer's expected meaning and units. Link benchmark scripts/results committed with the plugin.
@@ -24,6 +31,14 @@ Include the maximum payload table, boundary test results, generated artifact siz
 ## 4. Build and runtime
 
 List dependencies, versions, licenses, build integration, runtime image requirements, platform support, and any reproducible-build constraints. State whether the component uses temporary files or external processes and how they are bounded and cleaned up.
+
+Include a third-party attribution inventory for outside code and dependencies:
+upstream source URLs, exact versions/commits, license evidence/compatibility,
+local source paths, and modifications. Record preserved or prepended
+upstream-compliant copyright/attribution/license headers for vendored/adapted
+sources and verify required LICENSE/NOTICE texts are shipped in the kit.
+Unresolved or incompatible license terms block completion; do not invent
+copyright ownership or licensing permissions.
 
 ## 5. Plugin packaging
 
@@ -42,7 +57,21 @@ Document the shared-library target and output path, exported `createEncoding`/`d
 | Initial `twoSixIndirect` test composition | |
 | Format-specific transport compatibility result | |
 
-Document the tested composition that selects this encoding with the existing `twoSixIndirect` transport, followed by any format-specific transport compatibility test. Include exact test commands and results. 
+Document the tested composition that selects this encoding with the existing `twoSixIndirect` transport, followed by any format-specific transport compatibility test. Include exact test commands and results.
+
+Report every required initial integration scenario separately:
+
+| Scenario | Connector / listener CLI | Result and delivery evidence | Preserved logs and encoded artifacts |
+|---|---|---|---|
+| Send-only (`send`) | `--send` / `--recv` | | Sender artifacts |
+| Request/reply (`send-recv`) | `--send-recv` / `--recv-reply` | | Both nodes' artifacts |
+| Persistent socket proxy (`client-connect`) | `--client-connect` / `--server-connect` | | Both nodes' artifacts |
+
+Record `save-encoded-output=true` on every participating node, actual host
+artifact paths, and independent validation of saved encoded content. Preserve
+separate per-scenario run evidence before rerunning. All three modes must pass;
+one passing scenario is not a completed Phase 4 integration gate. Report failed,
+skipped, or blocked modes as incomplete rather than substituting another mode.
 
 ## 7. Security and limitations
 

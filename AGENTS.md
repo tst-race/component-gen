@@ -102,6 +102,37 @@ Four sequential phases. Each produces a markdown design doc + code.
 
 ## Encoding component workflow (in order)
 
+### Third-party code and licenses
+
+For all generated plugins and proofs, acknowledge and cite outside code,
+including adapted snippets, vendored sources, and imported/linked dependencies.
+Record upstream project/source URLs, exact versions or commits, applicable
+licenses, local files, and modifications in the plugin/proof attribution
+inventory (for example, `THIRD_PARTY_NOTICES.md`). Check actual upstream license
+files and redistribution/compatibility obligations before reuse; unknown or
+incompatible terms are a blocker, not permission to copy. Preserve upstream
+copyright, license headers, LICENSE and NOTICE files. Prepend an accurate,
+language-appropriate attribution/license header to vendored or adapted source
+files where one is missing, following upstream requirements; do not invent
+copyright ownership, replace existing notices, or claim a license not granted
+by upstream. Include required notices/license texts in distributed kits, not
+only in design documentation. Imported dependencies need attribution and license
+checks, but do not modify their installed source files to add headers.
+
+### Zero-message encoding
+
+An `encodeBytes` call with zero payload bytes is a real encoding request, not a
+no-op. It must complete exactly once through `onBytesEncoded` with `ENCODE_OK`
+and valid content of the declared format for the supplied parameters. An image
+encoding must still emit a valid image; decoding that carrier through
+`decodeBytes` must complete with `ENCODE_OK` and exactly zero message bytes,
+without exposing framing, padding, or filler as message data. Empty encoded
+content is allowed only if it is valid for the declared format (for example,
+Base64 text); a zero-byte file is not a valid image. Never skip the callback or
+report failure merely because no message was queued. Real codec or I/O errors
+still use the normal failure callback. Prove this behavior with format validity,
+exact empty round-trip, SDK callback, and persisted-artifact tests.
+
 Encoding components are separate from transport plugins. The seed is the name of or a link to an existing library for encoding data into a different format to support transmission of data across services that have minimal content type supports. Phase 1 may survey lossy codecs as ordinary format tools, but must state their fidelity limits; a plugin that claims arbitrary-byte encoding must prove exact byte recovery.
 
 Invoke encoding work with `/encoding-phase1 <format>`, `/encoding-phase2 <format>`, `/encoding-phase3 <format>`, and `/encoding-phase4 <format>`. Run them in order; each phase reads the previous phase's deliverable. Phase 1 through Phase 3 artifacts live under `designs/<format>/`; Phase 4 generates `<format>-encoding/` and carries the approved design documents into its `docs/` directory.
@@ -113,7 +144,9 @@ Each phase produces its design or implementation deliverable. Phase 1 records th
 3. **Proof of concept:** create a runnable, isolated encode/decode round trip and tests for arbitrary bytes, malformed input, empty input, and capacity boundaries. Measure and document timing on the target runtime. Persist representative encoded content (typical and boundary cases) under `designs/<format>/poc/test-output/` so the developer can inspect it with independent tools after the run; use synthetic inputs and record the paths. Write `ENCODING_PROOF_OF_CONCEPT.md`.
 4. **Encoding plugin:** implement `IEncodingComponent`, following the base64 example in `plugins/decomposed-exemplars`. Report the actual MIME type, a defensible `maxBytes` for each parameter set, and the scheduler-compatible encoding-time value. The C++ and Python starter plugins include an optional `save-encoded-output` user setting, default false, which writes successful encoded bytes under the component logging directory when enabled. In the dedicated integration-test composition only, declare this as an optional boolean channel parameter (default false) and set `<composition id>.save-encoded-output=true` for every participating node; verify and inspect the resulting files for offline analysis. Keep the shared exemplar unchanged and use synthetic test payloads. Test first with the existing `twoSixIndirect` transport and the new encoding selected in a dedicated composition; then test compatibility with a chosen content-format transport. Do not claim service-transformation robustness unless it is an ordinary, documented format-compatibility check that preserves exact decoded bytes.
 
-The encoding component is not complete until encode/decode round-trip tests pass, declared capacity is verified at its boundary, timing semantics and measurement conditions are recorded, and the initial `twoSixIndirect` integration passes. The later format-specific transport integration is a separate compatibility gate.
+The initial `twoSixIndirect` integration requires three separate scenarios using the new encoding in a dedicated composition: send-only (`send`: connector `--send`, listener `--recv`), send-recv/recv-reply (`send-recv`: connector `--send-recv`, listener `--recv-reply`), and client/server-connect (`client-connect`: connector `--client-connect`, listener `--server-connect`). All three must pass; a single just-send or request/reply test is insufficient. Do not replace a failing mode with another mode. Preserve separate per-scenario commands, results, logs, and encoded artifacts before reruns overwrite them, verifying sender artifacts for send-only and both nodes' artifacts for the bidirectional modes. Enable capture on every node, but do not require a receive-only node to encode. A failed, skipped, or blocked scenario leaves Phase 4 incomplete.
+
+The encoding component is not complete until encode/decode round-trip tests pass, declared capacity is verified at its boundary, timing semantics and measurement conditions are recorded, and all three initial `twoSixIndirect` integration scenarios pass with validated encoded artifacts preserved. The later format-specific transport integration is a separate compatibility gate.
 
 ## Where the new plugin goes and what it is called
 

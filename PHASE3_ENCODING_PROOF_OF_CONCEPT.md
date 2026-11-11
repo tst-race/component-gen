@@ -22,6 +22,22 @@ Cover at minimum:
 - Repeated calls and concurrent calls if the library/component will support them.
 - Resource cleanup and bounded memory/time behavior.
 
+The empty-input case must succeed: generate valid content of the declared
+format and verify that decoding it returns exactly zero message bytes. Do not
+accept an empty file for image/media formats that require headers and content,
+or substitute a skipped test for a valid no-message carrier. Persist this
+zero-message artifact in `poc/test-output/` alongside the typical and boundary
+cases and record its format-validation result. Base64 may validly encode an
+empty message as empty text; this does not generalize to images.
+
+Acknowledge outside code in a provenance/license inventory with source URLs,
+exact versions/commits, license evidence, local paths, and modifications. Check
+licenses before reuse, preserve upstream headers and LICENSE/NOTICE files, and
+prepend accurate language-appropriate attribution/license headers to vendored
+or adapted sources missing them. Do not invent ownership or license grants.
+Imported dependencies require citation/license review, not edits to installed
+library sources. Preserve required notices for later kit packaging.
+
 ## 3. Benchmarks
 
 Measure encode and decode separately using the runtime/container intended for the plugin. Record tool/version, CPU/memory constraints, input sizes, warm-up, sample count, and summary statistics. Resolve and cite the framework consumer's `encodingTime` interpretation and units; explain how the value to be returned by `getEncodingProperties()` follows from that contract. Preserve raw benchmark output or a reproducible script without including sensitive data.

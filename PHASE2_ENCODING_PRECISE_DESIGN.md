@@ -18,6 +18,20 @@ Record the selected library's source implementation language and the API form th
 
 Use the real MIME type recognized by the downstream transport. Avoid overly broad types when a specific type is available. If output is lossy, document that exact byte recovery is not supported and stop before implementing a reliable-byte encoding plugin.
 
+Specify the zero-message carrier contract explicitly: encoding zero payload
+bytes must produce valid content in this format for every supported parameter
+set, and decoding that content must return exactly zero message bytes. For an
+image, specify valid dimensions/format and how the empty payload is represented
+without returning padding or framing as data. A zero-byte encoded file is only
+acceptable when valid for the declared format, such as Base64 text. Empty input
+must not be treated as an unsupported case or a reason to omit completion.
+
+Document outside-code provenance (upstream source URL, exact version/commit,
+license, and local adaptation plan). Verify license compatibility and required
+headers, notices, and redistribution texts before reuse; unresolved license
+terms block implementation. Plan attribution for imports as well as vendored
+code, and packaging of required license/NOTICE files in the plugin kit.
+
 ## 2. Capacity contract
 
 `SpecificEncodingProperties.maxBytes` is the maximum input payload size that the selected parameter set can safely process. Specify how that value was derived, including format headers/metadata, framing, integer limits, memory limits, library limits, and parameter-dependent variation. Never use an arbitrary placeholder such as `1000000` without evidence.
